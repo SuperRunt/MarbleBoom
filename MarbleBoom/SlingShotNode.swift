@@ -10,14 +10,12 @@ import SpriteKit
 
 class SlingShotNode: SKSpriteNode {
     
-    let kBallRadius:CGFloat = 30.0
+    let kBallRadius:CGFloat = 20.0
     let kCircleAngle = CGFloat(M_PI)*2
     
     var parentScene: SKScene = SKScene()
     var slingPostNode = SKShapeNode()
     var shooterNode = SKShapeNode()
-    
-    var slingAction = SKAction()
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -37,28 +35,28 @@ class SlingShotNode: SKSpriteNode {
             return nil
         }
         parentScene = scene
-//        position = CGPointMake(-size.width/2, 0.0)
         
         slingPostNode = setUpSlingPost()
         addChild(slingPostNode)
         shooterNode = setUpShooter()
         addChild(shooterNode)
-        // TODO: bad form to change the parent's physicsworld here. need to change
-        let springSequence = [SKAction.waitForDuration(0.1), SKAction.runBlock({self.parentScene.physicsWorld.removeAllJoints()})]
-        slingAction = SKAction.sequence(springSequence)
-
     }
     
+    func addSpring() {
+        let spring = SKPhysicsJointSpring.jointWithBodyA(slingPostNode.physicsBody, bodyB: shooterNode.physicsBody, anchorA: slingPostNode.position, anchorB: shooterNode.position)
+        spring.damping = 0.2;
+        spring.frequency = 1.0;
+        parentScene.physicsWorld.addJoint(spring)
+    }
     
-    
-    func setUpShooter(path: CGPath=CGPathCreateMutable(), color: SKColor=SKColor.blueColor()) -> SKShapeNode {
+    private func setUpShooter(path: CGPath=CGPathCreateMutable(), color: SKColor=SKColor.blueColor()) -> SKShapeNode {
         
-        let shooter = CGPathIsEmpty(path) ? SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, 60.0, 60.0), nil), centered: true) : SKShapeNode(path: path)
+        let shooter = CGPathIsEmpty(path) ? SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, kBallRadius*2, kBallRadius*2), nil), centered: true) : SKShapeNode(path: path)
         
         shooter.fillColor = color
         shooter.strokeColor = color
         shooter.glowWidth = 0.5
-        shooter.position = CGPointMake(0.0, -size.height*0.2)
+        shooter.position = CGPointMake(size.width/2, size.height*0.2)
         shooter.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius) // TODO: change to be same size as sprite
         shooter.physicsBody?.mass = 1.0
         shooter.physicsBody?.categoryBitMask = GameBitmask.categoryShooters.rawValue
@@ -69,11 +67,11 @@ class SlingShotNode: SKSpriteNode {
         return shooter
     }
     
-    func setUpSlingPost() -> SKShapeNode {
+    private func setUpSlingPost() -> SKShapeNode {
         let post = SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, 60.0, 60.0), nil), centered: true)
         post.fillColor = SKColor.redColor()
         post.strokeColor = SKColor.clearColor()
-        post.position = CGPointMake(0.0, -size.height*0.1)
+        post.position = CGPointMake(size.width/2, size.height*0.3)
         post.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius)
         post.physicsBody?.categoryBitMask = GameBitmask.categoryInvisibles.rawValue
         // Give the post a near-infinite mass so it won't move
@@ -82,17 +80,6 @@ class SlingShotNode: SKSpriteNode {
         post.name = "slingPost"
         
         return post
-    }
-    
-    func addJoint(positionA: CGPoint, positionB: CGPoint) {
-        // Connect shooter with post via a spring
-//        let positionA = convertPoint(slingPostNode.position, fromNode: parentScene)
-//        let positionB = convertPoint(shooterNode.position, fromNode: parentScene)
-        
-        let spring = SKPhysicsJointSpring.jointWithBodyA(slingPostNode.physicsBody, bodyB: shooterNode.physicsBody, anchorA: positionA, anchorB: positionB)
-        spring.damping = 0.2;
-        spring.frequency = 1.0;
-        parentScene.physicsWorld.addJoint(spring)
     }
 
 
@@ -185,67 +172,6 @@ class SlingShotNode: SKSpriteNode {
 //        }
 //    }
 //    
-//    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
-//        /* Called when a touch begins */
-//        
-//        for touch: AnyObject in touches {
-//            let location = touch.locationInNode(self)
-//            selectNodeForTouch(location)
-//        }
-//    }
-//    
-//    override func touchesMoved(touches: NSSet, withEvent event: UIEvent) {
-//        let touch = touches.anyObject()
-//        let positionInScene = touch?.locationInNode(self)
-//        let previousPosition = touch?.previousLocationInNode(self)
-//        let translation = CGPointMake(positionInScene!.x - previousPosition!.x, positionInScene!.y - previousPosition!.y)
-//        _selectedNode.position = CGPointMake(positionInScene!.x + translation.x, positionInScene!.y + translation.y)
-//    }
-//    
-//    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
-//        //        square.runAction(SKAction.repeatActionForever(slingAction))
-//    }
-//    
-//    override func update(currentTime: CFTimeInterval) {
-//        /* Called before each frame is rendered */
-//    }
-//    
-//    override func didSimulatePhysics() {
-//        self.enumerateChildNodesWithName("post", usingBlock: {
-//            node, stop in
-//            if ( node.position.y < 0 ) {
-//                node.removeFromParent()
-//            }
-//        })
-//        self.enumerateChildNodesWithName("shooter", usingBlock: {
-//            node, stop in
-//            if ( node.position.y == 0 ) {
-//                node.removeFromParent()
-//            }
-//            // spring lets go of ball as it passes the slingpost
-//            if ( node.position.y > self.slingPost.position.y ) {
-//                self.runAction(self.slingAction)
-//            }
-//        })
-//    }
-//    
-//    private func selectNodeForTouch(touchLocation: CGPoint) {
-//        let touchedNode = self.nodeAtPoint(touchLocation)
-//        if ( _selectedNode != touchedNode ) {
-//            _selectedNode.removeAllActions()
-//            _selectedNode.runAction(SKAction.rotateToAngle(0.0, duration: 0.1))
-//            _selectedNode = touchedNode as SKShapeNode
-//            
-//            if ( touchedNode.name == "square" ) {
-//                let sequence = SKAction.sequence([
-//                    SKAction.rotateToAngle(-2.0, duration: 0.1),
-//                    SKAction.rotateToAngle(0.0, duration: 0.1),
-//                    SKAction.rotateToAngle(2.0, duration: 0.1),
-//                    SKAction.rotateToAngle(0.0, duration: 0.1)
-//                    ])
-//                _selectedNode.runAction(sequence)
-//            }
-//        }
-//    }
+//
 }
 
