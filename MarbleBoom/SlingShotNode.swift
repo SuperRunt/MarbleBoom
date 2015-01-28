@@ -44,7 +44,7 @@ class SlingShotNode: SKSpriteNode {
     
     func addSpring() {
         let spring = SKPhysicsJointSpring.jointWithBodyA(slingPostNode.physicsBody, bodyB: shooterNode.physicsBody, anchorA: slingPostNode.position, anchorB: shooterNode.position)
-        spring.damping = 0.2;
+//        spring.damping = 0.1;
         spring.frequency = 1.0;
         parentScene.physicsWorld.addJoint(spring)
     }
@@ -68,11 +68,11 @@ class SlingShotNode: SKSpriteNode {
     }
     
     private func setUpSlingPost() -> SKShapeNode {
-        let post = SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, 60.0, 60.0), nil), centered: true)
-        post.fillColor = SKColor.redColor()
+        let post = SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, 1.0, 1.0), nil), centered: true)
+        post.fillColor = SKColor.clearColor()
         post.strokeColor = SKColor.clearColor()
         post.position = CGPointMake(size.width/2, size.height*0.3)
-        post.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius)
+        post.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius/10)
         post.physicsBody?.categoryBitMask = GameBitmask.categoryInvisibles.rawValue
         // Give the post a near-infinite mass so it won't move
         post.physicsBody?.mass = 1000000
