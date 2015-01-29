@@ -71,7 +71,6 @@ class GameViewController: UIViewController {
 }
 
 // category bitmask
-// TODO: change to enum
 enum GameBitmask: UInt32 {
     case categoryShooters =       0
     case categoryTargets =       1
@@ -80,6 +79,13 @@ enum GameBitmask: UInt32 {
     case categoryMagneticField = 4
 }
 
+// node names
+enum NodeNames: String {
+    case shooterDefault =   "shooter"
+    case shooterLaunched =  "shooterLaunched"
+    case slingPostDefault = "slingPost"
+    
+}
 
 //extension SKNode {
 //    class func unarchiveFromFile(file : NSString) -> SKNode? {

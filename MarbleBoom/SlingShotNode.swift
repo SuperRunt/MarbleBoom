@@ -15,7 +15,8 @@ class SlingShotNode: SKSpriteNode {
     
     var parentScene: SKScene = SKScene()
     var slingPostNode = SKShapeNode()
-    var shooterNode = SKShapeNode()
+//    var shooterNode = SKShapeNode()
+    var shooterNode = SKSpriteNode()
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -30,6 +31,7 @@ class SlingShotNode: SKSpriteNode {
     }
     
     convenience init? (scene: SKScene) {
+        
         self.init(color: SKColor.clearColor(), size: scene.size)
         if !(scene.size.width != 0) { // trying to make sure the scene is initialized
             return nil
@@ -43,26 +45,40 @@ class SlingShotNode: SKSpriteNode {
     }
     
     func addSpring() {
-        let spring = SKPhysicsJointSpring.jointWithBodyA(slingPostNode.physicsBody, bodyB: shooterNode.physicsBody, anchorA: slingPostNode.position, anchorB: shooterNode.position)
-//        spring.damping = 0.1;
-        spring.frequency = 1.0;
-        parentScene.physicsWorld.addJoint(spring)
+        addSpringBetween(slingPostNode, shooter: shooterNode)
     }
     
-    private func setUpShooter(path: CGPath=CGPathCreateMutable(), color: SKColor=SKColor.blueColor()) -> SKShapeNode {
+    func resetShooterAndSpring() {
+        shooterNode = setUpShooter()
+        addChild(shooterNode)
+        addSpringBetween(slingPostNode, shooter: shooterNode)
+    }
+    
+    private func addSpringBetween(post: SKShapeNode, shooter: SKSpriteNode) -> SKPhysicsJointSpring {
+        let spring = SKPhysicsJointSpring.jointWithBodyA(post.physicsBody, bodyB: shooter.physicsBody, anchorA: post.position, anchorB: shooter.position)
+        spring.frequency = 1.0;
+        parentScene.physicsWorld.addJoint(spring)
         
-        let shooter = CGPathIsEmpty(path) ? SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, kBallRadius*2, kBallRadius*2), nil), centered: true) : SKShapeNode(path: path)
+        return spring
+    }
+    
+//    private func setUpShooter(path: CGPath=CGPathCreateMutable(), color: SKColor=SKColor.blueColor()) -> SKShapeNode {
+    private func setUpShooter(path: CGPath=CGPathCreateMutable(), color: SKColor=SKColor.blueColor()) -> SKSpriteNode {
         
-        shooter.fillColor = color
-        shooter.strokeColor = color
-        shooter.glowWidth = 0.5
+//        let shooter = CGPathIsEmpty(path) ? SKShapeNode(path: CGPathCreateWithEllipseInRect(CGRectMake(0.0, 0.0, kBallRadius*2, kBallRadius*2), nil), centered: true) : SKShapeNode(path: path)
+        let shooter = SKSpriteNode(imageNamed: TargetType.random().spriteName)
+        
+//        shooter.fillColor = color
+//        shooter.strokeColor = color
+//        shooter.glowWidth = 0.5
         shooter.position = CGPointMake(size.width/2, size.height*0.2)
-        shooter.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius) // TODO: change to be same size as sprite
+//        shooter.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius) // TODO: change to be same size as sprite
+        shooter.physicsBody = SKPhysicsBody(rectangleOfSize: shooter.frame.size)
         shooter.physicsBody?.mass = 1.0
         shooter.physicsBody?.categoryBitMask = GameBitmask.categoryShooters.rawValue
         shooter.physicsBody?.collisionBitMask = GameBitmask.categoryTargets.rawValue | GameBitmask.categoryWalls.rawValue
         shooter.physicsBody?.restitution = 0.3
-        shooter.name = "shooter"
+        shooter.name = NodeNames.shooterDefault.rawValue
         
         return shooter
     }
@@ -77,60 +93,11 @@ class SlingShotNode: SKSpriteNode {
         // Give the post a near-infinite mass so it won't move
         post.physicsBody?.mass = 1000000
         post.physicsBody?.affectedByGravity = false
-        post.name = "slingPost"
+        post.name = NodeNames.slingPostDefault.rawValue
         
         return post
     }
 
-
-    
-//    override func didMoveToView(view: SKView) {
-//        /* Setup your scene here */
-//        
-//        // collision boundaries
-//        self.physicsBody = SKPhysicsBody(edgeLoopFromRect: self.frame)
-//        self.physicsBody?.affectedByGravity = false
-//        
-//        // sling action
-//        let springSequence = [SKAction.waitForDuration(0.1), SKAction.runBlock({self.physicsWorld.removeAllJoints()})]
-//        slingAction = SKAction.sequence(springSequence)
-//        
-//        // set shooter position TODO: change how this is done
-//        shooterInitialPosition = CGPointMake(self.frame.width/2, self.frame.height*0.3)
-//
-//        // Create an invisible post to anchor the square to
-//        self.setUpSling()
-//        
-//        // shooter node
-//        self.setUpShooter()
-//        
-//        // Connect shooter with post via a spring
-//        let spring = SKPhysicsJointSpring.jointWithBodyA(slingPost.physicsBody, bodyB: shooterNode.physicsBody, anchorA: slingPost.position, anchorB: shooterNode.position)
-//        spring.damping = 0.2;
-//        spring.frequency = 1.0;
-//        self.physicsWorld.addJoint(spring)
-//
-//        self.setUpTargets()
-//        
-//        // Lower gravity from default {0.0, -9.8} to allow the
-//        // ball to be slung farther
-//        self.physicsWorld.gravity = CGVectorMake(0.0, -6.0);
-//    }
-//    
-//
-//    func setUpSling() {
-//        slingPost.fillColor = SKColor.clearColor()
-//        slingPost.strokeColor = SKColor.clearColor()
-//        slingPost.position = CGPointMake(self.frame.width*0.5, self.frame.height*0.3)
-//        slingPost.physicsBody = SKPhysicsBody(circleOfRadius: kBallRadius)
-//        slingPost.physicsBody?.categoryBitMask = categoryInvisibles
-//        slingPost.name = "slingPost"
-//        // Give the field a near-infinite mass so it won't move
-//        slingPost.physicsBody?.mass = 1000000
-//        slingPost.physicsBody?.affectedByGravity = false
-//        
-//        self.addChild(slingPost)
-//    }
 //
 //    func setUpTargets() {
 //        let magneticField = SKFieldNode.magneticField();

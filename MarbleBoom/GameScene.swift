@@ -73,21 +73,27 @@ class GameScene: SKScene {
     }
     
     override func didSimulatePhysics() {
-        slingShotLayer?.enumerateChildNodesWithName("slingPost", usingBlock: {
+        // shooter diappears when hitting floor
+        slingShotLayer?.enumerateChildNodesWithName(NodeNames.shooterLaunched.rawValue, usingBlock: {
             node, stop in
-            if ( node.position.y < 0 ) {
+            if ( node.frame.origin.y < -3.0 ) {
                 node.removeFromParent()
             }
         })
-        slingShotLayer?.enumerateChildNodesWithName("shooter", usingBlock: {
+        
+        // spring lets go of ball as it passes the slingpost
+        // and adds new shooter to the scene
+        slingShotLayer?.enumerateChildNodesWithName(NodeNames.shooterDefault.rawValue, usingBlock: {
             node, stop in
             if ( node.position.y == 0 ) {
                 node.removeFromParent()
             }
-            // spring lets go of ball as it passes the slingpost
             let postPos = self.slingShotLayer!.slingPostNode.position
             if ( node.position.y > postPos.y ) {
-                self.runAction(self.slingAction)
+                self.runAction(self.slingAction, completion: {
+                    node.name = NodeNames.shooterLaunched.rawValue
+                    self.slingShotLayer?.resetShooterAndSpring()
+                })
             }
         })
     }
@@ -96,9 +102,13 @@ class GameScene: SKScene {
         slingShotLayer = SlingShotNode(scene: self)
         gameLayer.addChild(slingShotLayer!)
         
-        let springSequence = [SKAction.waitForDuration(0.1), SKAction.runBlock({self.physicsWorld.removeAllJoints()})]
-        slingAction = SKAction.sequence(springSequence)
-        
+//        let springSequence = [SKAction.waitForDuration(0.1), SKAction.runBlock({
+//            self.physicsWorld.removeAllJoints()
+//        })]
+//        slingAction = SKAction.sequence(springSequence)
+        slingAction = SKAction.runBlock({
+            self.physicsWorld.removeAllJoints()
+        })
         slingShotLayer?.addSpring()
     }
     
@@ -120,7 +130,7 @@ class GameScene: SKScene {
         if ( _selectedNode != touchedNode ) {
             _selectedNode.removeAllActions()
             _selectedNode.runAction(SKAction.rotateToAngle(0.0, duration: 0.1))
-            _selectedNode = touchedNode as SKShapeNode
+            _selectedNode = touchedNode as SKSpriteNode
             
             if ( touchedNode.name == "square" ) {
                 let sequence = SKAction.sequence([
